@@ -8,7 +8,7 @@ cubesize = 10
 screen_width = 80
 screen_height = 30
 K2 = 40
-K1 = 25
+K1 = 20
 
 def main():
     clear_command = "cls" if os.name == "nt" else "clear"
@@ -59,7 +59,6 @@ def calculate_surface(cubeX, cubeY, cubeZ, ch, zbuffer, screen_pixels):
         pixel_position = xp + yp * screen_width
         if ooz > zbuffer[pixel_position]:
             zbuffer[pixel_position] = ooz
-            luminance_index = int(ooz * 8)  # Shading based on depth
             screen_pixels[pixel_position] = ch
 
 def calculate_x(i, j, k):
