@@ -2,79 +2,92 @@ import os
 import time
 from math import sin, cos
 
-# Global rotation angles
-A, B, C = 0, 0, 0
-cubesize = 10
-screen_width = 80
-screen_height = 30
+# Constants
+CUBE_SIZE = 10
+SCREEN_WIDTH = 80
+SCREEN_HEIGHT = 30
 K2 = 40
 K1 = 20
+ROTATE_SPEED = 0.05
+SLEEP_TIME = 0.03
 
+# Function to initialize the rotation angles
+def init_rotation():
+    return 0, 0, 0  # A, B, C angles
+
+# Main rendering function
 def main():
     clear_command = "cls" if os.name == "nt" else "clear"
 
+    # Initialize rotation angles
+    A, B, C = init_rotation()
+
     while True:
         # Reset buffers
-        zbuffer = [-float('inf')] * (screen_width * screen_height)
-        screen_pixels = [' '] * (screen_width * screen_height)
+        zbuffer = [-float('inf')] * (SCREEN_WIDTH * SCREEN_HEIGHT)
+        screen_pixels = [' '] * (SCREEN_WIDTH * SCREEN_HEIGHT)
 
-        cubeX = -cubesize
-        while cubeX < cubesize:
-            cubeX += 0.6
-            cubeY = -cubesize
-            while cubeY < cubesize:
-                cubeY += 0.6
+        # Iterate through the cube's grid points
+        for cubeX in frange(-CUBE_SIZE, CUBE_SIZE, 0.6):
+            for cubeY in frange(-CUBE_SIZE, CUBE_SIZE, 0.6):
                 # Draw 6 cube faces using different characters
-                calculate_surface(cubeX, cubeY, -cubesize, '@', zbuffer, screen_pixels)
-                calculate_surface(cubesize, cubeY, cubeX, '$', zbuffer, screen_pixels)
-                calculate_surface(-cubesize, cubeY, -cubeX, '#', zbuffer, screen_pixels)
-                calculate_surface(-cubeX, cubeY, cubesize, '~', zbuffer, screen_pixels)
-                calculate_surface(cubeX, -cubesize, -cubeY, ';', zbuffer, screen_pixels)
-                calculate_surface(cubeX, cubesize, cubeY, '+', zbuffer, screen_pixels)
+                draw_cube_faces(cubeX, cubeY, -CUBE_SIZE, '@', zbuffer, screen_pixels, A, B, C)
+                draw_cube_faces(CUBE_SIZE, cubeY, cubeX, '$', zbuffer, screen_pixels, A, B, C)
+                draw_cube_faces(-CUBE_SIZE, cubeY, -cubeX, '#', zbuffer, screen_pixels, A, B, C)
+                draw_cube_faces(-cubeX, cubeY, CUBE_SIZE, '~', zbuffer, screen_pixels, A, B, C)
+                draw_cube_faces(cubeX, -CUBE_SIZE, -cubeY, ';', zbuffer, screen_pixels, A, B, C)
+                draw_cube_faces(cubeX, CUBE_SIZE, cubeY, '+', zbuffer, screen_pixels, A, B, C)
 
-        # Clear and render frame
+        # Clear and render the frame
         os.system(clear_command)
-        for i in range(screen_height):
-            row = "".join(screen_pixels[i * screen_width:(i + 1) * screen_width])
-            print(row)
+        render_frame(screen_pixels)
 
         # Increment rotation angles
-        global A, C
-        A += 0.05
-        C += 0.05
+        A += ROTATE_SPEED
+        C += ROTATE_SPEED
 
-        time.sleep(0.03)
+        time.sleep(SLEEP_TIME)
 
-def calculate_surface(cubeX, cubeY, cubeZ, ch, zbuffer, screen_pixels):
-    """Calculate projection and render points on a surface."""
-    x = calculate_x(cubeX, cubeY, cubeZ)
-    y = calculate_y(cubeX, cubeY, cubeZ)
-    z = calculate_z(cubeX, cubeY, cubeZ) + K2
+# Function to generate floating-point ranges for iteration
+def frange(start, stop, step):
+    while start < stop:
+        yield round(start, 2)
+        start += step
 
-    ooz = 1 / z  # One over Z (depth inversion)
-    xp = int(screen_width / 2 + K1 * ooz * x*2)
-    yp = int(screen_height / 2 - K1 * ooz * y)
+# Function to draw cube faces
+def draw_cube_faces(cubeX, cubeY, cubeZ, char, zbuffer, screen_pixels, A, B, C):
+    x = calculate_x(cubeX, cubeY, cubeZ, A, B, C)
+    y = calculate_y(cubeX, cubeY, cubeZ, A, B, C)
+    z = calculate_z(cubeX, cubeY, cubeZ, A, B, C) + K2
 
-    if 0 <= xp < screen_width and 0 <= yp < screen_height:
-        pixel_position = xp + yp * screen_width
+    ooz = 1 / z  # Inverse of depth (1/z)
+    xp = int(SCREEN_WIDTH / 2 + K1 * ooz * x * 2)
+    yp = int(SCREEN_HEIGHT / 2 - K1 * ooz * y)
+
+    if 0 <= xp < SCREEN_WIDTH and 0 <= yp < SCREEN_HEIGHT:
+        pixel_position = xp + yp * SCREEN_WIDTH
         if ooz > zbuffer[pixel_position]:
             zbuffer[pixel_position] = ooz
-            screen_pixels[pixel_position] = ch
+            screen_pixels[pixel_position] = char
 
-def calculate_x(i, j, k):
-    global A, B, C
+# 3D rotation functions
+def calculate_x(i, j, k, A, B, C):
     return (j * sin(A) * sin(B) * cos(C)) - (k * cos(A) * sin(B) * cos(C)) + \
            (j * cos(A) * sin(C)) + (k * sin(A) * sin(C)) + (i * cos(B) * cos(C))
 
-def calculate_y(i, j, k):
-    global A, B, C
+def calculate_y(i, j, k, A, B, C):
     return (j * cos(A) * cos(C)) + (k * sin(A) * cos(C)) - \
            (j * sin(A) * sin(B) * sin(C)) + (k * cos(A) * sin(B) * sin(C)) - \
            (i * cos(B) * sin(C))
 
-def calculate_z(i, j, k):
-    global A, B, C
+def calculate_z(i, j, k, A, B, C):
     return (k * cos(A) * cos(B)) - ((j * sin(A) * cos(B)) + (i * sin(B)))
+
+# Function to render the frame
+def render_frame(screen_pixels):
+    for i in range(SCREEN_HEIGHT):
+        row = "".join(screen_pixels[i * SCREEN_WIDTH:(i + 1) * SCREEN_WIDTH])
+        print(row)
 
 if __name__ == "__main__":
     main()

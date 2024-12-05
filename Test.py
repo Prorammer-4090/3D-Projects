@@ -153,7 +153,7 @@ def update_light_direction(delta_theta, delta_phi):
     light_phi2 = max(math.pi/4, min(light_phi2, 3*math.pi/4))  # Keep within 45° to 135° range
 
     # Calculate the actual radii for the light sources
-    actual_radius = light_radius * (1 + 0.1 * math.sin(light_theta1))
+    actual_radius = light_radius * (1 + 0.1 * math.sin(light_theta1))*1.5
 
     # Calculate the 3D positions of the lights
     x1 = actual_radius * math.sin(light_phi1) * math.cos(light_theta1)
