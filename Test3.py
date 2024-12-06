@@ -1,6 +1,7 @@
 import math
 import os
 import time
+import colorsys
 from math import sin, cos, sqrt
 
 # Global rotation angles
@@ -61,6 +62,9 @@ def calculate_surface(cubeX, cubeY, cubeZ, zbuffer, screen_pixels, light_directi
 
     light_intensity_factor /= 2
 
+    # Ensure a minimum light intensity to avoid too dark colors
+    light_intensity_factor = max(0.1, light_intensity_factor)  # Prevent dark colors
+
     z = world_z + K2
     ooz = 1 / z
     xp = int(screen_width / 2 + K1 * ooz * world_x * 2)
@@ -70,9 +74,29 @@ def calculate_surface(cubeX, cubeY, cubeZ, zbuffer, screen_pixels, light_directi
         pixel_position = xp + yp * screen_width
         if ooz > zbuffer[pixel_position]:
             zbuffer[pixel_position] = ooz
-            luminance_chars = ".,-~:;=!*#$@"
+
+            # Convert intensity to a color using HSV
+            # Here, we use green as the primary color and adjust brightness
+            hue = 0.33  # Green in HSV color space
+            saturation = 1.0
+            value = min(1, light_intensity_factor)  # Cap the intensity at 1 for full brightness
+            r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)
+
+            # Adjust color to add some white light blending
+            r = min(1, r + light_intensity_factor * 0.3)
+            g = min(1, g + light_intensity_factor * 0.3)
+            b = min(1, b + light_intensity_factor * 0.3)
+
+            # Convert to ANSI RGB color codes
+            r, g, b = int(r * 255), int(g * 255), int(b * 255)
+
+            # ANSI escape code for the calculated color
+            color_code = f"\033[38;2;{r};{g};{b}m"
+
+            # Assign the colored character to the screen
+            luminance_chars = ".,-~:;=!*#$@"  # Set of characters representing brightness levels
             char_index = int(light_intensity_factor * (len(luminance_chars) - 1))
-            screen_pixels[pixel_position] = luminance_chars[min(char_index, len(luminance_chars) - 1)]
+            screen_pixels[pixel_position] = f"{color_code}{luminance_chars[min(char_index, len(luminance_chars) - 1)]}\033[0m"
 
 def calculate_x(i, j, k):
     return (j * sin(A) * sin(B) * cos(C)) - (k * cos(A) * sin(B) * cos(C)) + \

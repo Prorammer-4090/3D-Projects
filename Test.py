@@ -1,6 +1,7 @@
 import math
 import os
 import time
+import colorsys
 from math import sin, cos, sqrt
 
 # Global rotation angles (for rotating the cube)
@@ -115,9 +116,29 @@ def calculate_surface(cubeX, cubeY, cubeZ, zbuffer, screen_pixels):
         pixel_position = xp + yp * screen_width
         if ooz > zbuffer[pixel_position]:  # Update z-buffer if closer to the camera
             zbuffer[pixel_position] = ooz
+
+            # Apply a minimum brightness to avoid dark colors
+            light_intensity_factor = max(0.3, light_intensity_factor)  # Minimum intensity to avoid darkness
+
+            # Convert intensity to green (using colorsys)
+            green_intensity = min(1, light_intensity_factor)  # Cap the intensity at 1
+            r, g, b = colorsys.hsv_to_rgb(0.33, 1.0, green_intensity)  # Green hue in HSV (0.33)
+
+            # Apply light intensity to turn the green color towards white
+            r = min(1, r + light_intensity_factor * 0.3)
+            g = min(1, g + light_intensity_factor * 0.3)
+            b = min(1, b + light_intensity_factor * 0.3)
+
+            # Convert back to ANSI RGB color codes
+            r, g, b = int(r * 255), int(g * 255), int(b * 255)
+
+            # ANSI escape code for the calculated color
+            color_code = f"\033[38;2;{r};{g};{b}m"
+
+            # Assign the colored character to the screen
             luminance_chars = ".,-~:;=!*#$@"  # Set of characters representing brightness levels
             char_index = int(light_intensity_factor * (len(luminance_chars) - 1))
-            screen_pixels[pixel_position] = luminance_chars[min(char_index, len(luminance_chars) - 1)]
+            screen_pixels[pixel_position] = f"{color_code}{luminance_chars[min(char_index, len(luminance_chars) - 1)]}\033[0m"
 
 # Functions to calculate the x, y, z coordinates of the cube surfaces after rotation
 def calculate_x(i, j, k):

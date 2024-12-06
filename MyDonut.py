@@ -49,8 +49,14 @@ def main():
                     if z_inverse > zbuffer[pixel_position]:
                         zbuffer[pixel_position] = z_inverse
                         luminance_index = L * 8
-                        screen_pixels[pixel_position] = '.,-~:;=!*#$@'[int(luminance_index)]
-        
+                        char = '.,-~:;=!*#$@'[int(luminance_index)]
+
+                        # ANSI escape code for green color
+                        color_code = "\033[38;2;0;255;0m"  # Green color in RGB
+
+                        # Assign the colored character to the screen
+                        screen_pixels[pixel_position] = f"{color_code}{char}\033[0m"
+
         os.system(clear_command)
         for index, char in enumerate(screen_pixels):
             if index % screen_width == 0:

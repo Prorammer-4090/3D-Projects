@@ -11,7 +11,7 @@ public class Donut {
 
         while (true) {
             long startTime = System.currentTimeMillis();  // Start FPS timing
-            System.out.print("\033[H");
+            System.out.print("\033[H");  // Move cursor to top left
             System.out.flush();
             
             double[] zBuffer = new double[screenHeight * screenWidth];
@@ -51,19 +51,22 @@ public class Donut {
             }
 
             StringBuilder output = new StringBuilder();
+            output.append("\033[38;2;0;255;0m");  // Set green color
             for (int i = 0; i < screenPixels.length; i++) {
                 if (i % screenWidth == 0) output.append("\n");
                 output.append(screenPixels[i]);
             }
+            output.append("\033[0m");  // Reset color
+            
+            // Append FPS counter at the bottom
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            double fps = 1000.0 / elapsedTime;
+            output.append(String.format("\n\033[38;2;0;255;0mFPS: %.2f\033[0m", fps));
+            
             System.out.print(output);
 
             a += 0.07;
             b += 0.02;
-
-            // Calculate FPS
-            long elapsedTime = System.currentTimeMillis() - startTime;
-            double fps = 1000.0 / elapsedTime;
-            System.out.printf("\nFPS: %.2f\n", fps);
 
             // Add frame delay to control animation speed
             try {

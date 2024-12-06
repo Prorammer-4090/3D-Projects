@@ -1,6 +1,7 @@
 import os
 import time
 from math import sin, cos
+import colorsys
 
 # Constants
 CUBE_SIZE = 10
@@ -21,6 +22,9 @@ def main():
 
     # Initialize rotation angles
     A, B, C = init_rotation()
+
+    frame_count = 0  # To count the frames rendered
+    start_time = time.time()  # To measure elapsed time
 
     while True:
         # Reset buffers
@@ -46,6 +50,19 @@ def main():
         A += ROTATE_SPEED
         C += ROTATE_SPEED
 
+        # Update FPS counter
+        frame_count += 1
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= 1:
+            fps = frame_count / elapsed_time
+            frame_count = 0
+            start_time = time.time()
+        else:
+            fps = frame_count / elapsed_time if elapsed_time > 0 else 0
+
+        # Print FPS in the same line
+        print(f"\rFPS: {fps:.2f}", end="")  # Overwrites the previous FPS on the same line
+
         time.sleep(SLEEP_TIME)
 
 # Function to generate floating-point ranges for iteration
@@ -68,7 +85,19 @@ def draw_cube_faces(cubeX, cubeY, cubeZ, char, zbuffer, screen_pixels, A, B, C):
         pixel_position = xp + yp * SCREEN_WIDTH
         if ooz > zbuffer[pixel_position]:
             zbuffer[pixel_position] = ooz
-            screen_pixels[pixel_position] = char
+
+            # Use colorsys to generate a green color (hue = 0.33, max saturation and value)
+            hue = 0.33  # Green color in HSV
+            saturation = 1.0
+            value = 1.0  # Brightness
+            r, g, b = colorsys.hsv_to_rgb(hue, saturation, value)  # Convert to RGB
+            r, g, b = int(r * 255), int(g * 255), int(b * 255)  # Convert to 8-bit RGB
+
+            # ANSI escape code for green color
+            color_code = f"\033[38;2;{r};{g};{b}m"  # Green color in RGB
+
+            # Assign the colored character to the screen
+            screen_pixels[pixel_position] = f"{color_code}{char}\033[0m"
 
 # 3D rotation functions
 def calculate_x(i, j, k, A, B, C):

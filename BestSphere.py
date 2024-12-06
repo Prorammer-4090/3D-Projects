@@ -22,6 +22,9 @@ def generate_sphere(radius, rotation_x, rotation_y, light_theta, light_phi, ligh
     zbuffer = [-float('inf')] * (screen_width * screen_height)  # Z-buffer for depth sorting
     screen_pixels = [' '] * (screen_width * screen_height)  # Screen pixel buffer
 
+    # ANSI escape code for green color
+    color_code = "\033[38;2;0;255;0m"  # Green color in RGB
+
     # Loop over spherical coordinates to generate each point
     for phi in range(0, 628, 7):  # phi angle (latitude) loop
         for theta in range(0, 628, 2):  # theta angle (longitude) loop
@@ -41,7 +44,6 @@ def generate_sphere(radius, rotation_x, rotation_y, light_theta, light_phi, ligh
             y_rot = y * math.cos(rotation_x) - z_rot_y * math.sin(rotation_x)
             z_rot = y * math.sin(rotation_x) + z_rot_y * math.cos(rotation_x)
 
-
             # Normalize the normal vector at the current point
             nx, ny, nz = x_rot / radius, y_rot / radius, z_rot / radius
 
@@ -49,7 +51,7 @@ def generate_sphere(radius, rotation_x, rotation_y, light_theta, light_phi, ligh
             if nz > 0:
                 # Diffuse lighting: dot product between normal and light direction
                 dot_light_normal = max(0, nx * light_x + ny * light_y + nz * light_z)
-                
+
                 # Light attenuation for points behind the sphere
                 attenuation = 1.0 if dot_light_normal > 0 else 0.2  
                 diffuse = dot_light_normal * light_intensity * attenuation
@@ -72,7 +74,8 @@ def generate_sphere(radius, rotation_x, rotation_y, light_theta, light_phi, ligh
                     pixel_position = xp + screen_width * yp
                     if zbuffer[pixel_position] < z_rot:  # Ensure that the nearest point is drawn
                         zbuffer[pixel_position] = z_rot
-                        screen_pixels[pixel_position] = chars[luminance_index]  # Assign character based on intensity
+                        # Assign the colored character based on intensity
+                        screen_pixels[pixel_position] = f"{color_code}{chars[luminance_index]}\033[0m"
 
     # Return the 2D representation of the sphere
     return [''.join(screen_pixels[i * screen_width:(i + 1) * screen_width]) for i in range(screen_height)]

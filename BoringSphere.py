@@ -56,7 +56,15 @@ def generate_sphere(radius, rotation_x, rotation_y, light_theta, light_phi, ligh
                 pixel_position = xp + screen_width * yp
                 if zbuffer[pixel_position] < z_rot:
                     zbuffer[pixel_position] = z_rot
-                    screen_pixels[pixel_position] = chars[luminance_index]
+                    
+                    # Fixed green color for all characters
+                    r, g, b = 0, 255, 0  # Full green, no red or blue
+                    
+                    # ANSI escape code for fixed green color
+                    color_code = f"\033[38;2;{r};{g};{b}m"  # Green color in RGB
+
+                    # Assign the colored character to the screen
+                    screen_pixels[pixel_position] = f"{color_code}{chars[luminance_index]}\033[0m"
 
     screen = [''.join(screen_pixels[i * screen_width:(i + 1) * screen_width]) for i in range(screen_height)]
     return screen
